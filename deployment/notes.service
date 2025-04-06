@@ -1,0 +1,14 @@
+[Unit]
+Description=Spring Boot Notes Application
+After=network.target
+
+[Service]
+User=admin
+Group=admin
+EnvironmentFile=/etc/default/notes-env
+ExecStart=/usr/bin/java -jar /opt/notes/notes.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
