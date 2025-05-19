@@ -6,8 +6,11 @@ import com.plcoding.spring_boot_crash_course.database.repository.NoteRepository
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import org.bson.types.ObjectId
+import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 
 // POST http://localhost:8085/notes
@@ -18,8 +21,8 @@ import java.time.Instant
 @RequestMapping("/notes")
 class NoteController(
     private val repository: NoteRepository,
-    private val noteRepository: NoteRepository
 ) {
+    private val logger = LoggerFactory.getLogger(NoteController::class.java)
 
     data class NoteRequest(
         val id: String?,
@@ -59,6 +62,7 @@ class NoteController(
     @GetMapping
     fun findByOwnerId(): List<NoteResponse> {
         val ownerId = SecurityContextHolder.getContext().authentication.principal as String
+        logger.info("Retrieving notes.")
         return repository.findByOwnerId(ObjectId(ownerId)).map {
             it.toResponse()
         }
@@ -66,7 +70,7 @@ class NoteController(
 
     @DeleteMapping(path = ["/{id}"])
     fun deleteById(@PathVariable id: String) {
-        val note = noteRepository.findById(ObjectId(id)).orElseThrow {
+        val note = repository.findById(ObjectId(id)).orElseThrow {
             IllegalArgumentException("Note not found")
         }
         val ownerId = SecurityContextHolder.getContext().authentication.principal as String

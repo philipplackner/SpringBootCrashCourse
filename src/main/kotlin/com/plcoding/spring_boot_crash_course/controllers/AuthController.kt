@@ -4,6 +4,7 @@ import com.plcoding.spring_boot_crash_course.security.AuthService
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Pattern
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(
     private val authService: AuthService
 ) {
+    private val logger = LoggerFactory.getLogger(this.javaClass)
+
     data class AuthRequest(
         @field:Email(message = "Invalid email format.")
         val email: String,
@@ -33,6 +36,7 @@ class AuthController(
         @Valid @RequestBody body: AuthRequest
     ) {
         authService.register(body.email, body.password)
+        logger.info("A user registered!")
     }
 
     @PostMapping("/login")

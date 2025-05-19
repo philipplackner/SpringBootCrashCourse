@@ -39,6 +39,10 @@ dependencies {
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+	implementation("ch.qos.logback:logback-classic")
+	implementation("com.github.loki4j:loki-logback-appender:1.5.2")
+	implementation("net.logstash.logback:logstash-logback-encoder:8.1")
 }
 
 kotlin {

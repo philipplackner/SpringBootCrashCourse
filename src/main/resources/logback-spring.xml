@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration xmlns="http://ch.qos.logback/xml/ns/logback-spring"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://ch.qos.logback/xml/ns/logback-spring
+                   https://raw.githubusercontent.com/borgille/logback-spring-XSD/master/src/main/xsd/logback-spring.xsd">
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d %clr(%-5level %logger) - %msg%n%clr(%wEx)</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC_LOKI" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>16384</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="LOKI_DIRECT" />
+    </appender>
+
+    <appender name="LOKI_DIRECT" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>https://logs-prod-012.grafana.net/loki/api/v1/push</url>
+            <auth>
+                <username>${LOKI_USER}</username>
+                <password>${LOKI_TOKEN}</password>
+            </auth>
+        </http>
+        <format>
+            <label>
+                <pattern>
+                    app=${spring.application.name:-spring-boot-crash-course},
+                    env=${spring.profiles.active:-prod}
+                </pattern>
+                <structuredMetadataPattern>
+                    level = %level,
+                    thread = %thread,
+                    class = %logger,
+                    userId = %mdc{userId:-none}
+                </structuredMetadataPattern>
+            </label>
+            <staticLabels>true</staticLabels>
+            <message class="com.github.loki4j.logback.JsonLayout" />
+        </format>
+    </appender>
+
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.json</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.%i.json.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>14</maxHistory>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>UTC</timeZone>
+            <customFields>
+                {
+                    "service": "${spring.application.name:-spring-boot-crash-course}",
+                    "env": "${spring.profiles.active:-prod}"
+                }
+            </customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ASYNC_LOKI" />
+        <appender-ref ref="JSON_FILE" />
+    </root>
+</configuration>
